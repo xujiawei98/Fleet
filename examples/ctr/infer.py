@@ -1,123 +1,105 @@
-import argparse
-import logging
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import numpy as np
-# disable gpu training for this example 
+from __future__ import print_function
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+import time
+import numpy as np
+import logging
+from argument import params_args
 import paddle
 import paddle.fluid as fluid
+from network import CTR
+import py_reader_generator as py_reader
 
-import criteo_reader
-from network_conf import ctr_dnn_model_dataset
-
-
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="PaddlePaddle DeepFM example")
-    parser.add_argument(
-        '--model_path',
-        type=str,
-        required=True,
-        help="The path of model parameters gz file")
-    parser.add_argument(
-        '--data_path',
-        type=str,
-        required=True,
-        help="The path of the dataset to infer")
-    parser.add_argument(
-        '--embedding_size',
-        type=int,
-        default=10,
-        help="The size for embedding layer (default:10)")
-    parser.add_argument(
-        '--sparse_feature_dim',
-        type=int,
-        default=1000001,
-        help="The size for embedding layer (default:1000001)")
-    parser.add_argument(
-        '--batch_size',
-        type=int,
-        default=1000,
-        help="The size of mini-batch (default:1000)")
-
-    return parser.parse_args()
-
-def to_lodtensor(data, place):
-    seq_lens = [len(seq) for seq in data]
-    cur_len = 0
-    lod = [cur_len]
-    for l in seq_lens:
-        cur_len += l
-        lod.append(cur_len)
-    flattened_data = np.concatenate(data, axis=0).astype("int64")
-    flattened_data = flattened_data.reshape([len(flattened_data), 1])
-    res = fluid.LoDTensor()
-    res.set(flattened_data, place)
-    res.set_lod([lod])
-    return res
-
-def data2tensor(data, place):
-    feed_dict = {}
-    dense = data[0]
-    sparse = data[1:-1]
-    y = data[-1]
-    dense_data = np.array([x[0] for x in data]).astype("float32")
-    dense_data = dense_data.reshape([-1, 13])
-    feed_dict["dense_input"] = dense_data
-    for i in range(26):
-        sparse_data = to_lodtensor([x[1 + i] for x in data], place)
-        feed_dict["C" + str(1 + i)] = sparse_data
-    
-    y_data = np.array([x[-1] for x in data]).astype("int64")
-    y_data = y_data.reshape([-1, 1])
-    feed_dict["label"] = y_data
-    return feed_dict
-
-def infer():
-    args = parse_args()
-
+def run_infer(params, model_path):
     place = fluid.CPUPlace()
-    inference_scope = fluid.core.Scope()
+    train_generator = py_reader.CriteoDataset(params.sparse_feature_dim)
+    file_list = [
+        str(params.test_files_path) + "/%s" % x
+        for x in os.listdir(params.test_files_path)
+    ]
+    test_reader = paddle.batch(train_generator.test(file_list),
+                               batch_size=params.batch_size)
+    startup_program = fluid.framework.Program()
+    test_program = fluid.framework.Program()
+    ctr_model = CTR()
 
-    filelist = ["%s/%s" % (args.data_path, x) for x in os.listdir(args.data_path)]
-    from criteo_reader import CriteoDataset
-    criteo_dataset = CriteoDataset()
-    criteo_dataset.setup(args.sparse_feature_dim)
-    exe = fluid.Executor(place)
-    
-    train_thread_num = 10
-    whole_filelist = ["raw_data/part-%d" % x for x in range(len(os.listdir("raw_data")))]
-    test_files = whole_filelist[int(0.8*len(whole_filelist)):int(0.85*len(whole_filelist))]
-    #file_groups = [whole_filelist[i:i+train_thread_num] for i in range(0, len(whole_filelist), train_thread_num)]
-    
     def set_zero(var_name):
-        param = inference_scope.var(var_name).get_tensor()
+        param = fluid.global_scope().var(var_name).get_tensor()
         param_array = np.zeros(param._get_dims()).astype("int64")
         param.set(param_array, place)
 
-    epochs = 20
-    for i in range(epochs):
-        cur_model_path = args.model_path + "/epoch" + str(i + 1) + ".model"
-        with fluid.scope_guard(inference_scope):
-            [inference_program, feed_target_names, fetch_targets] = \
-                        fluid.io.load_inference_model(cur_model_path, exe)
-            auc_states_names = ['_generated_var_2', '_generated_var_3']
+    with fluid.framework.program_guard(test_program, startup_program):
+        with fluid.unique_name.guard():
+            inputs = ctr_model.input_data(params)
+            loss, auc_var, batch_auc_var = ctr_model.net(inputs, params)
+
+            exe = fluid.Executor(place)
+            feeder = fluid.DataFeeder(feed_list=inputs, place=place)
+
+            fluid.io.load_persistables(
+                executor=exe,
+                dirname=model_path,
+                main_program=fluid.default_main_program())
+
+            auc_states_names = [
+                '_generated_var_0', '_generated_var_1', '_generated_var_2',
+                '_generated_var_3'
+            ]
             for name in auc_states_names:
                 set_zero(name)
 
-            test_reader = criteo_dataset.infer_reader(test_files, 1000, 100000)
+            run_index = 0
+            infer_auc = 0
+            L = []
             for batch_id, data in enumerate(test_reader()):
-                loss_val, auc_val = exe.run(inference_program,
-                                            feed=data2tensor(data, place),
-                                            fetch_list=fetch_targets)
-            print("train_pass_%d, test_pass_%d\t%f" % (i - 1, i, auc_val))
+                loss_val, auc_val = exe.run(test_program,
+                                            feed=feeder.feed(data),
+                                            fetch_list=[loss, auc_var])
+                run_index += 1
+                infer_auc = auc_val
+                L.append(loss_val / params.batch_size)
+                if batch_id % 100 == 0:
+                    logger.info("TEST --> batch: {} loss: {} auc: {}".format(
+                        batch_id, loss_val / params.batch_size, auc_val))
+
+            infer_loss = np.mean(L)
+            infer_result = {}
+            infer_result['loss'] = infer_loss
+            infer_result['auc'] = infer_auc
+            log_path = model_path + '/infer_result.log'
+            logger.info(str(infer_result))
+            with open(log_path, 'w+') as f:
+                f.write(str(infer_result))
+            logger.info("Inference complete")
+    return infer_result
 
 
-if __name__ == '__main__':
-    infer()
+if __name__ == "__main__":
+    params = params_args()
+    model_list = []
+    for _, dir, _ in os.walk(params.model_path):
+        for model in dir:
+            if "epoch" in model:
+                path = "/".join([params.model_path, model])
+                model_list.append(path)
+    for model in model_list:
+        logger.info("Test model {}".format(model))
+        run_infer(params, model)
