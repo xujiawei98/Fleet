@@ -14,13 +14,12 @@
 # limitations under the License.
 
 import paddle.fluid as fluid
-from distribute_base import FleetDistRunnerBase
 from argument import params_args
 import os
 import math
 
 
-class CTR(FleetDistRunnerBase):
+class CTR():
     def input_data(self, params):
         dense_feature_dim = params.dense_feature_dim
         self.dense_input = fluid.layers.data(
@@ -99,7 +98,3 @@ class CTR(FleetDistRunnerBase):
         return dataset
 
 
-if __name__ == '__main__':
-    params = params_args()
-    model = CTR()
-    model.runtime_main(params)
