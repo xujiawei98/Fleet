@@ -38,7 +38,6 @@ def params_args(args=None):
                         type=str,
                         default="test_data",
                         help="Data file(s) for validation or evaluation.")
-    params.add_argument("--log_path", type=str, default="result")
     params.add_argument("--model_path", type=str, default="model")
 
     # parameters of training
