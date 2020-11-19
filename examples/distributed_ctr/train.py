@@ -23,6 +23,9 @@ import logging
 import numpy as np
 
 import paddle
+
+paddle.enable_static()
+
 from paddle.distributed import fleet
 import paddle.static as fluid
 
@@ -139,7 +142,7 @@ def train(params):
                                     loss_val / params.batch_size, auc_val,
                                     batch_auc_val))
                     batch_id += 1
-            except fluid.core.EOFException:
+            except paddle.fluid.core.EOFException:
                 reader.reset()
 
             end_time = time.time()

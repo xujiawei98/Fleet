@@ -28,7 +28,7 @@ export PADDLE_TRAINERS_NUM=${PADDLE_TRAINERS}
 export TRAINING_ROLE=PSERVER
 export GLOG_v=0
 
-SC="train.py"
+SC="train.py --test=True"
 
 for((i=0;i<$PADDLE_PSERVER_NUMS;i++))
 do
