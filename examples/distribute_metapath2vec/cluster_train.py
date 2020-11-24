@@ -56,30 +56,14 @@ def optimization(base_lr, loss, train_steps, optimizer='sgd'):
     optimizer.minimize(loss)
 
 
-def build_complied_prog(train_program, model_loss):
-    num_threads = int(os.getenv("CPU_NUM", 10))
-    trainer_id = int(os.getenv("PADDLE_TRAINER_ID", 0))
-    exec_strategy = F.ExecutionStrategy()
-    exec_strategy.num_threads = num_threads
-    #exec_strategy.use_experimental_executor = True
-    build_strategy = F.BuildStrategy()
-    build_strategy.enable_inplace = True
-    #build_strategy.memory_optimize = True
-    build_strategy.memory_optimize = False
-    build_strategy.remove_unnecessary_lock = False
-    if num_threads > 1:
-        build_strategy.reduce_strategy = F.BuildStrategy.ReduceStrategy.Reduce
-
-    compiled_prog = F.compiler.CompiledProgram(
-        train_program).with_data_parallel(loss_name=model_loss.name)
-    return compiled_prog
-
-
 def train_prog(exe, program, loss, node2vec_pyreader, args, train_steps):
-    trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
-    step = 0
     if not os.path.exists(args.save_path):
         os.makedirs(args.save_path)
+
+    step = 0
+
+    node2vec_pyreader.start()
+
     while True:
         try:
             begin_time = time.time()
@@ -89,14 +73,17 @@ def train_prog(exe, program, loss, node2vec_pyreader, args, train_steps):
             step += 1
         except F.core.EOFException:
             node2vec_pyreader.reset()
+            log.info("training reader end")
 
         if step % args.steps_per_save == 0 or step == train_steps:
             save_path = args.save_path
-            if trainer_id == 0:
+            if fleet.is_first_worker():
                 model_path = os.path.join(save_path, "%s" % step)
+                log.info("save persistables with dir: {}".format(model_path))
                 fleet.save_persistables(exe, model_path)
 
         if step == train_steps:
+            log.info("stop training at step: {}".format(step))
             break
 
 
@@ -149,9 +136,10 @@ def main(args):
                 break
 
         pyreader.decorate_tensor_provider(data_generator)
-        pyreader.start()
 
         train_prog(exe, F.default_main_program(), loss, pyreader, args, train_steps)
+
+        fleet.stop_worker()
 
 
 if __name__ == '__main__':
@@ -161,3 +149,4 @@ if __name__ == '__main__':
     config = load_config(args.config)
     log.info(config)
     main(config)
+
