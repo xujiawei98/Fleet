@@ -1,0 +1,3 @@
+source code: https://github.com/PaddlePaddle/PGL/tree/main/examples/distribute_metapath2vec
+
+replace local_config/cloud_run.sh/cluster_train.py with the same name files in current directory.
