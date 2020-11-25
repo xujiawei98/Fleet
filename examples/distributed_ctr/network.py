@@ -80,11 +80,12 @@ class CTR():
         return avg_cost, auc_var, batch_auc_var, words
 
     def py_reader(self, params):
-        py_reader = fluid.layers.create_py_reader_by_data(capacity=64,
-                                                          feed_list=self._words,
-                                                          name='py_reader',
-                                                          use_double_buffer=False)
+        py_reader = fluid.io.DataLoader.from_generator(capacity=64,
+                                                       feed_list=self._words,
+                                                       iterable=False,
+                                                       use_double_buffer=False)
         return py_reader
+
 
     def dataset_reader(self, inputs, params):
         dataset = fluid.DatasetFactory().create_dataset()

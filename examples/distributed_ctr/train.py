@@ -50,19 +50,15 @@ def get_pyreader(inputs, params):
     #    file_list = fleet.utils().get_file_shard(file_list)
     logger.info("file list: {}".format(file_list))
 
-    train_generator = CriteoDataset(params.sparse_feature_dim)
-    train_reader = paddle.batch(paddle.reader.shuffle(
-        train_generator.train(file_list, fleet.worker_num(),
-                              fleet.worker_index()),
-        buf_size=params.batch_size * 100),
-                                batch_size=params.batch_size)
+    py_reader = fluid.io.DataLoader.from_generator(capacity=64,
+                                                       feed_list=self._words,
+                                                       iterable=False,
+                                                       use_double_buffer=False)
 
-    py_reader = paddle.fluid.layers.create_py_reader_by_data(capacity=64,
-                                                      feed_list=inputs,
-                                                      name='py_reader',
-                                                      use_double_buffer=False)
-    inputs = paddle.fluid.layers.read_file(py_reader)
-    py_reader.decorate_paddle_reader(train_reader)
+    train_generator = CriteoDataset(params.sparse_feature_dim)
+    py_reader.set_sample_generator(train_generator.train(
+                    file_list, fleet.worker_num(), fleet.worker_index()), params.batch_size)
+
     return inputs, py_reader
 
 
