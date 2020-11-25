@@ -51,7 +51,7 @@ def get_pyreader(inputs, params):
     logger.info("file list: {}".format(file_list))
 
     py_reader = fluid.io.DataLoader.from_generator(capacity=64,
-                                                       feed_list=self._words,
+                                                       feed_list=input,
                                                        iterable=False,
                                                        use_double_buffer=False)
 
