@@ -50,8 +50,8 @@ def get_pyreader(inputs, params):
     #    file_list = fleet.utils().get_file_shard(file_list)
     logger.info("file list: {}".format(file_list))
 
-    py_reader = fluid.io.DataLoader.from_generator(capacity=64,
-                                                       feed_list=input,
+    py_reader = paddle.fluid.io.DataLoader.from_generator(capacity=64,
+                                                       feed_list=inputs,
                                                        iterable=False,
                                                        use_double_buffer=False)
 
