@@ -39,7 +39,7 @@ class VarStruct(object):
             program.global_block()._remove_var(self.name)
 
     def create_selectedrows_var(self, block):
-        block.create_var(name="{}.sels".format(self.name),
+        block.create_var(name="{}".format(self.name),
                          dtype=self.dtype,
                          persistable=self.persistable,
                          type=core.VarDesc.VarType.SELECTED_ROWS,
@@ -102,9 +102,10 @@ def save(var, path):
 
 ids = []
 values = []
+shutil.move(os.path.join(modir, table), os.path.join(modir, "{}.shard".format(table)))
 
 for table in sparse_tables:
-    path = os.path.join(modir, table)
+    path = os.path.join(modir, "{}.shard".format(table))
     for f in os.listdir(path):
         if not f.startswith(table) or not f.endswith(".txt"):
             continue
@@ -122,5 +123,5 @@ for table in sparse_tables:
     tensor = var.get_tensor()
     place = paddle.fluid.CPUPlace()
     tensor.set(np.array(values), place)
-    save(table, "{}/{}.merged".format(modir, table))
+    save(table, "{}/{}".format(modir, table))
 
