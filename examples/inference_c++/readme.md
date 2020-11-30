@@ -17,3 +17,15 @@ make
 ./main
 
 ```
+
+
+introduce covert.py:
+1. convert sparse variable's type from LOD_TENSOR to SELECTED_ROWS in __model__
+2. merge shard sparse params into one with SELECTED_ROWS.
+
+```
+specify model dirname in .py
+python it.
+tips: still have many hard codes in it.
+```
+
