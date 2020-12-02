@@ -96,7 +96,7 @@ def train(params):
     ctr_model = CTR()
     inputs = ctr_model.input_data(params)
     inputs, reader = get_pyreader(inputs, params)
-    avg_cost, auc_var, batch_auc_var, inputs = ctr_model.net(inputs, params)
+    avg_cost, auc_var, batch_auc_var, inputs, predict = ctr_model.net(inputs, params)
     optimizer = paddle.optimizer.Adam(params.learning_rate)
 
     # 配置分布式的optimizer，传入我们指定的strategy，构建program
@@ -149,7 +149,9 @@ def train(params):
             if params.test and fleet.is_first_worker():
                 model_path = (str(params.model_path) + "/" + "epoch_" +
                               str(epoch))
-                fleet.save_persistables(executor=exe, dirname=model_path)
+                fleet.save_inference_model(dirname=model_path,
+                                           feeded_var_names=["dense_input"]+["sparse_embedding_{}.tmp_0".format(i) for i in range(26) ],
+                                           target_vars=[predict], executor=exe)
 
         fleet.stop_worker()
         logger.info("Distribute Train Success!")
