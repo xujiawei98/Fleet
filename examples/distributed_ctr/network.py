@@ -53,7 +53,9 @@ class CTR():
                                            initializer=fluid.initializer.Uniform()))
 
         sparse_embed_seq = list(map(embedding_layer, words[1:-1]))
-
+        for sparse_emb in sparse_embed_seq:
+            print("Inference sparse variable name: {}".format(sparse_emb.name))
+        print("Inference dense variable name: {}".format(words[0:1].name))
         concated = fluid.layers.concat(sparse_embed_seq + words[0:1], axis=1)
 
         fc1 = fluid.layers.fc(input=concated, size=400, act='relu',
@@ -77,7 +79,7 @@ class CTR():
         accuracy = fluid.layers.accuracy(input=predict, label=words[-1])
         auc_var, batch_auc_var, auc_states = \
             fluid.layers.auc(input=predict, label=words[-1], num_thresholds=2 ** 12, slide_steps=20)
-        return avg_cost, auc_var, batch_auc_var, words
+        return avg_cost, auc_var, batch_auc_var, words, predict
 
     def py_reader(self, params):
         py_reader = fluid.io.DataLoader.from_generator(capacity=64,

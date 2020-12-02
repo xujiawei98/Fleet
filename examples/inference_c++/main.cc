@@ -26,51 +26,10 @@ limitations under the License. */
 namespace paddle {
 
 struct Record {
-  std::vector<float> data;
-  std::vector<int32_t> shape;
+  std::vector<float> dense_data;
+  std::vector<std::vector<float>> sparse_data;
 };
 
-static void split(const std::string &str, char sep,
-                  std::vector<std::string> *pieces) {
-  pieces->clear();
-  if (str.empty()) {
-    return;
-  }
-  size_t pos = 0;
-  size_t next = str.find(sep, pos);
-  while (next != std::string::npos) {
-    pieces->push_back(str.substr(pos, next - pos));
-    pos = next + 1;
-    next = str.find(sep, pos);
-  }
-  if (!str.substr(pos).empty()) {
-    pieces->push_back(str.substr(pos));
-  }
-}
-
-Record ProcessALine(const std::string &line) {
-  VLOG(3) << "process a line";
-  std::vector<std::string> columns;
-  split(line, '\t', &columns);
-  CHECK_EQ(columns.size(), 2UL)
-      << "data format error, should be <data>\t<shape>";
-
-  Record record;
-  std::vector<std::string> data_strs;
-  split(columns[0], ' ', &data_strs);
-  for (auto &d : data_strs) {
-    record.data.push_back(std::stof(d));
-  }
-
-  std::vector<std::string> shape_strs;
-  split(columns[1], ' ', &shape_strs);
-  for (auto &s : shape_strs) {
-    record.shape.push_back(std::stoi(s));
-  }
-  VLOG(3) << "data size " << record.data.size();
-  VLOG(3) << "data shape size " << record.shape.size();
-  return record;
-}
 
 void RunAnalysis(int batch_size, std::string model_dirname) {
   // 1. 创建AnalysisConfig
@@ -83,31 +42,55 @@ void RunAnalysis(int batch_size, std::string model_dirname) {
   auto predictor = ::paddle::CreatePaddlePredictor<NativeConfig>(config);
 
   // Just a single batch of data.
-  std::string line = "0.1 0.2 0.23 0.33 0.13 0.56 0.78 0.88 0.99 0.11 0.22 0.33 0.44	1 13";
-  auto record = ProcessALine(line);
-  
-  // Inference.
-  PaddleTensor input;
-  input.shape = record.shape;
-  input.data =
-          PaddleBuf(record.data.data(), record.data.size() * sizeof(float));
-  input.dtype = PaddleDType::FLOAT32;
-
-  std::vector<PaddleTensor> output, analysis_output;
-  predictor->Run({input}, &output, 1);
-
-  auto& tensor = output.front();
-  size_t numel = tensor.data.length() / PaddleDtypeSize(tensor.dtype);
-  VLOG(1) << "predict numel: " << numel;
-  for (size_t i = 0; i < numel; ++i) {
-    VLOG(0) << "predict val: " << (static_cast<int64_t*>(tensor.data.data())[i]);
+  auto record = Record();
+  for (size_t i = 0; i < 13; i++) {
+    // Genearte dense data here
+    record.dense_data.push_back(1.0);
   }
 
-}
+  std::vector<int64_t> key_vec = {861009690, 836552220, 778450980, 58140440, 91813380, 117262650, 397836660, 627934030, 946120000, 11234850, 149644800, 300559680, 335589480, 556192380, 785140490, 896284770, 954638860, 979116410, 79506000, 222847040, 296136530, 458813520, 699324440, 784662080, 815949660, 869950730};
+  record.sparse_data.resize(key_vec.size());
+
+  for(auto i=0; i< key_vec.size(); i++) {
+    // Do lookup table here
+    record.sparse_data.push_back(std::vector<float>(10));
+  }
+
+  // Inference.
+  for (size_t try_cnt =0; try_cnt < 1000; try_cnt++) {
+    std::vector<PaddleTensor> p_tensor_vec;
+
+    PaddleTensor dense_input;
+    dense_input.shape = {1,13};
+    dense_input.data =
+            PaddleBuf(record.dense_data.data(), record.dense_data.size() * sizeof(float));
+    dense_input.dtype = PaddleDType::FLOAT32;
+
+    p_tensor_vec.push_back(dense_input);
+    for(size_t i =0; i < 26; i++) {
+      PaddleTensor cate_input;
+      cate_input.shape = {1,10};
+      cate_input.data = PaddleBuf(&(record.sparse_data[i]), record.sparse_data[i].size()*sizeof(float));
+      cate_input.dtype = PaddleDType::FLOAT32;
+      p_tensor_vec.push_back(cate_input);
+    }
+
+    std::vector<PaddleTensor> output, analysis_output;
+    predictor->Run(p_tensor_vec, &output, 1);
+
+    auto& tensor = output.front();
+    size_t numel = tensor.data.length() / PaddleDtypeSize(tensor.dtype);
+
+    std::cout << "Try cnt: "<< try_cnt<<" predict numel: " << numel << "\n";
+    for (size_t i = 0; i < numel; ++i) {
+      std::cout <<"No." << i << " predict val: " << (static_cast<float*>(tensor.data.data())[i]) << "\n";
+    }
+
+  }
 } // namespace paddle
+}
 
 int main() {
-  paddle::RunAnalysis(1, "../demo");
+  paddle::RunAnalysis(1, "../demo/");
   return 0;
 }
-
