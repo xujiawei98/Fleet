@@ -18,7 +18,6 @@
 .. toctree::
    :maxdepth: 1
    :caption: 如何设计分布式训练的搭建方案
-   :maxdepth: 2
    :numbered:
    :name: design 
 
