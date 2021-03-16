@@ -149,9 +149,10 @@ def train(params):
             if params.test and fleet.is_first_worker():
                 model_path = (str(params.model_path) + "/" + "epoch_" +
                               str(epoch))
-                fleet.save_inference_model(dirname=model_path,
-                                           feeded_var_names=["dense_input"]+["sparse_embedding_{}.tmp_0".format(i) for i in range(26) ],
-                                           target_vars=[predict], executor=exe)
+                fleet.save_persistables(executor=exe, dirname=model_path)
+                #fleet.save_inference_model(dirname=model_path,
+                #                           feeded_var_names=["dense_input"]+["sparse_embedding_{}.tmp_0".format(i) for i in range(26) ],
+                #                           target_vars=[predict], executor=exe)
 
         fleet.stop_worker()
         logger.info("Distribute Train Success!")

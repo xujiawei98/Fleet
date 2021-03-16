@@ -49,7 +49,7 @@ def params_args(args=None):
     params.add_argument("-b",
                         "--batch_size",
                         type=int,
-                        default=1000,
+                        default=128,
                         help="Mini batch size for training.")
     params.add_argument("-e",
                         "--epochs",

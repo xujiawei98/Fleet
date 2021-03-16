@@ -35,27 +35,23 @@ class CTR():
         self._words = [self.dense_input] + self.sparse_input_ids + [self.label]
         return self._words
 
-    def net(self, inputs, params):
+    def net(self, inputs, params, is_test=False, is_inference=False):
+        # when use sparse_embedding, sparse_feature_dim is fake.
         sparse_feature_dim = 1024
-        embedding_size = params.embedding_size
         words = inputs
-
-        is_test = bool(int(os.getenv("IS_INFERENCE", "0")))
 
         print("running sparse embedding with inference: {}".format("ON" if is_test else "OFF"))
 
         def embedding_layer(input):
-            return fluid.contrib.layers.sparse_embedding(
+            emb = fluid.contrib.layers.sparse_embedding(
                 input=input,
-                size=[sparse_feature_dim, embedding_size],
+                size=[sparse_feature_dim, params.embedding_size],
                 is_test=is_test,
                 param_attr=fluid.ParamAttr(name="SparseFeatFactors",
                                            initializer=fluid.initializer.Uniform()))
+            return fluid.layers.sequence_pool(emb, pool_type='sum')
 
         sparse_embed_seq = list(map(embedding_layer, words[1:-1]))
-        for sparse_emb in sparse_embed_seq:
-            print("Inference sparse variable name: {}".format(sparse_emb.name))
-        print("Inference dense variable name: {}".format(words[0:1].name))
         concated = fluid.layers.concat(sparse_embed_seq + words[0:1], axis=1)
 
         fc1 = fluid.layers.fc(input=concated, size=400, act='relu',
@@ -73,6 +69,9 @@ class CTR():
         predict = fluid.layers.fc(input=fc3, size=2, act='softmax',
                                   param_attr=fluid.ParamAttr(initializer=fluid.initializer.Normal(
                                       scale=1 / math.sqrt(fc3.shape[1]))))
+
+        if is_inference:
+            return None, None, None, words, predict
 
         cost = fluid.layers.cross_entropy(input=predict, label=words[-1])
         avg_cost = fluid.layers.reduce_sum(cost)

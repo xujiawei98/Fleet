@@ -23,6 +23,9 @@ import paddle.fluid as fluid
 from network import CTR
 import py_reader_generator as py_reader
 
+paddle.enable_static()
+
+
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
@@ -49,7 +52,7 @@ def run_infer(params, model_path):
     with fluid.framework.program_guard(test_program, startup_program):
         with fluid.unique_name.guard():
             inputs = ctr_model.input_data(params)
-            loss, auc_var, batch_auc_var = ctr_model.net(inputs, params)
+            _, _, _, words, predict = ctr_model.net(inputs, params, is_test=True, is_inference=True)
 
             exe = fluid.Executor(place)
             feeder = fluid.DataFeeder(feed_list=inputs, place=place)
@@ -59,33 +62,23 @@ def run_infer(params, model_path):
                 dirname=model_path,
                 main_program=fluid.default_main_program())
 
-            auc_states_names = [
-                '_generated_var_0', '_generated_var_1', '_generated_var_2',
-                '_generated_var_3'
-            ]
-            for name in auc_states_names:
-                set_zero(name)
+            label = words[-1]
 
-            run_index = 0
-            infer_auc = 0
-            L = []
+            labels = []
+            predicts = []
             for batch_id, data in enumerate(test_reader()):
-                loss_val, auc_val = exe.run(test_program,
+                l_val, pre_val = exe.run(test_program,
                                             feed=feeder.feed(data),
-                                            fetch_list=[loss, auc_var])
-                run_index += 1
-                infer_auc = auc_val
-                L.append(loss_val / params.batch_size)
-                if batch_id % 100 == 0:
-                    logger.info("TEST --> batch: {} loss: {} auc: {}".format(
-                        batch_id, loss_val / params.batch_size, auc_val))
+                                            fetch_list=[label, predict])
+                labels.extend(l_val)
+                predicts.extend(pre_val)
 
-            infer_loss = np.mean(L)
+            with open("infer.predict", "w") as wb:
+                for i in range(len(labels)):
+                    wb.write("{}\t{}\n".format(labels[i], predicts[i]))
+
             infer_result = {}
-            infer_result['loss'] = infer_loss
-            infer_result['auc'] = infer_auc
             log_path = model_path + '/infer_result.log'
-            logger.info(str(infer_result))
             with open(log_path, 'w+') as f:
                 f.write(str(infer_result))
             logger.info("Inference complete")
