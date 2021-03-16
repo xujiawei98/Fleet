@@ -44,11 +44,6 @@ def run_infer(params, model_path):
     test_program = fluid.framework.Program()
     ctr_model = CTR()
 
-    def set_zero(var_name):
-        param = fluid.global_scope().var(var_name).get_tensor()
-        param_array = np.zeros(param._get_dims()).astype("int64")
-        param.set(param_array, place)
-
     with fluid.framework.program_guard(test_program, startup_program):
         with fluid.unique_name.guard():
             inputs = ctr_model.input_data(params)

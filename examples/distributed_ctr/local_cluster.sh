@@ -7,6 +7,11 @@ if [ ! -d "./log" ]; then
 fi
 
 # environment variables for fleet distribute training
+
+export PADDLE_WITH_GLOO=1
+export PADDLE_GLOO_RENDEZVOUS=3
+export PADDLE_GLOO_HTTP_ENDPOINT=127.0.0.1:30019
+
 export PADDLE_PSERVER_NUMS=2
 export PADDLE_PSERVERS_IP_PORT_LIST="127.0.0.1:29031,127.0.0.1:29132"
 export PADDLE_PSERVER_PORT_ARRAY=(29031 29132)

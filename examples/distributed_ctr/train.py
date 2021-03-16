@@ -23,7 +23,7 @@ import logging
 import numpy as np
 
 import paddle
-
+from paddle.distributed.fleet.utils.ps_util import DistributedInfer
 paddle.enable_static()
 
 from paddle.distributed import fleet
@@ -83,6 +83,53 @@ def get_dataset(inputs, params):
     return dataset
 
 
+def distributed_predict():
+    place = paddle.fluid.CPUPlace()
+    train_generator = CriteoDataset(params.sparse_feature_dim)
+
+    file_list = [
+        str(params.test_files_path) + "/%s" % x
+        for x in os.listdir(params.test_files_path)
+    ]
+
+    test_reader = paddle.batch(train_generator.test(file_list),
+                               batch_size=params.batch_size)
+
+    startup_program = paddle.fluid.framework.Program()
+    test_program = paddle.fluid.framework.Program()
+
+    with paddle.fluid.framework.program_guard(test_program, startup_program):
+        with paddle.fluid.unique_name.guard():
+            ctr_model = CTR()
+            inputs = ctr_model.input_data(params)
+            _, _, _, words, predict = ctr_model.net(inputs, params, is_test=True, is_inference=True)
+
+    dist_infer = DistributedInfer(
+          main_program=test_program, startup_program=startup_program)
+
+    eval_dist_infer = dist_infer.get_dist_infer_program()
+
+    exe = paddle.fluid.Executor(place)
+    feeder = paddle.fluid.DataFeeder(feed_list=inputs, place=place)
+
+    label = words[-1]
+
+    labels = []
+    predicts = []
+    for batch_id, data in enumerate(test_reader()):
+        l_val, pre_val = exe.run(eval_dist_infer,
+                                 feed=feeder.feed(data),
+                                 fetch_list=[label, predict])
+        labels.extend(l_val)
+        predicts.extend(pre_val)
+
+    with open("infer.predict", "w") as wb:
+        for i in range(len(labels)):
+            wb.write("{}\t{}\n".format(labels[i], predicts[i]))
+    logger.info("Inference complete")
+
+
+
 def train(params):
     # 根据环境变量确定当前机器/进程在分布式训练中扮演的角色
     # 然后使用 fleet api的 init()方法初始化这个节点
@@ -110,7 +157,6 @@ def train(params):
         fleet.run_server()
 
     elif fleet.is_worker():
-
         exe = paddle.static.Executor(paddle.CPUPlace())
         exe.run(paddle.static.default_startup_program())
         # 初始化工作节点
@@ -144,6 +190,10 @@ def train(params):
             end_time = time.time()
             logger.info("epoch %d finished, use time=%d\n" %
                         ((epoch), end_time - start_time))
+
+            fleet.barrier_worker()
+            distributed_predict()
+            fleet.barrier_worker()
 
             # 默认使用0号节点保存模型
             if params.test and fleet.is_first_worker():
