@@ -1,0 +1,5 @@
+param=SparseFeatFactors
+shard_id=1
+row_names=Param,Moment1,Moment2,Beta1Pow,Beta2Pow,LearningRate
+row_dims=10,10,10,1,1,1
+count=57174

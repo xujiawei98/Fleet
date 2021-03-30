@@ -191,18 +191,21 @@ def train(params):
             logger.info("epoch %d finished, use time=%d\n" %
                         ((epoch), end_time - start_time))
 
-            fleet.barrier_worker()
-            distributed_predict()
-            fleet.barrier_worker()
+            #fleet.barrier_worker()
+            #distributed_predict()
+            #fleet.barrier_worker()
 
             # 默认使用0号节点保存模型
             if params.test and fleet.is_first_worker():
                 model_path = (str(params.model_path) + "/" + "epoch_" +
                               str(epoch))
+
+                input_varnames = [var.name for var in inputs[:-1]]
                 fleet.save_persistables(executor=exe, dirname=model_path)
-                #fleet.save_inference_model(dirname=model_path,
-                #                           feeded_var_names=["dense_input"]+["sparse_embedding_{}.tmp_0".format(i) for i in range(26) ],
-                #                           target_vars=[predict], executor=exe)
+                fleet.save_inference_model(dirname=model_path,
+                                          feeded_var_names=input_varnames,
+                                          #feeded_var_names=["dense_input"]+["sparse_embedding_{}.tmp_0".format(i) for i in range(26) ],
+                                           target_vars=[predict], executor=exe)
 
         fleet.stop_worker()
         logger.info("Distribute Train Success!")
