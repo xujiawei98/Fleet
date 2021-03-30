@@ -14,6 +14,7 @@ limitations under the License. */
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <map>
 #include <random>
 #include <string>
@@ -31,6 +32,7 @@ void GetInputTensors(int batch_size, std::vector<PaddleTensor>* inputs) {
   int sparse_slots = 27;
 
   std::default_random_engine generator;  
+  generator.seed(0);
   std::uniform_int_distribution<int> sparse_gen(5, 20);  
   std::uniform_int_distribution<int64_t> feasign_gen(0, 100000);  
   std::uniform_real_distribution<float> dense_gen(-1, 1);
@@ -62,7 +64,6 @@ void GetInputTensors(int batch_size, std::vector<PaddleTensor>* inputs) {
       }
 
       PaddleTensor input;
-      //input.shape = {batch_size, 1};
       input.shape = {(int)sparse.size(), 1};
       input.lod = {lod_1};
       input.data  = PaddleBuf(sparse.data(), sparse.size() * sizeof(int64_t));
@@ -83,23 +84,24 @@ void RunAnalysis(int batch_size, std::string model_dirname) {
   auto predictor = ::paddle::CreatePaddlePredictor<NativeConfig>(config);
 
   // Inference.
-  for (size_t try_cnt =0; try_cnt < 1000; try_cnt++) {
+  for (size_t try_cnt =0; try_cnt < 10; try_cnt++) {
     std::vector<PaddleTensor> inputs;
     GetInputTensors(100, &inputs);
 
     std::vector<PaddleTensor> outputs;
     predictor->Run(inputs, &outputs);
- 
-    std::cout << "outputs: " << outputs.size() << std::endl;
+    
+    auto& tensor = outputs.front();
+    size_t numel = tensor.data.length() / PaddleDtypeSize(tensor.dtype);
 
-    //auto& tensor = output.front();
-    //size_t numel = tensor.data.length() / PaddleDtypeSize(tensor.dtype);
+    std::stringstream ss;
+    auto idx = 0;
 
-    //std::cout << "Try cnt: "<< try_cnt<<" predict numel: " << numel << "\n";
-    //for (size_t i = 0; i < numel; ++i) {
-    //  std::cout <<"No." << i << " predict val: " << (static_cast<float*>(tensor.data.data())[i]) << "\n";
-    //}
+    for(auto x=0; x<tensor.shape[0]; x++) {
+       ss << static_cast<float*>(tensor.data.data())[2*x+1] << " "; 
+    }
 
+    std::cout << "count: " << try_cnt << " predicts: " << ss.str() << std::endl;
   }
 } // namespace paddle
 }
