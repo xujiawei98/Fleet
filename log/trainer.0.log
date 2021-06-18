@@ -1,0 +1,37 @@
+grep: warning: GREP_OPTIONS is deprecated; please use an alias or script
+/home/flink/flink-1.13.0/opt/python/py4j-0.10.8.1-src.zip/py4j/java_gateway.py:2049: DeprecationWarning: invalid escape sequence \*
+/home/flink/flink-1.13.0/opt/python/py4j-0.10.8.1-src.zip/py4j/java_gateway.py:2049: DeprecationWarning: invalid escape sequence \*
+/home/flink/flink-1.13.0/opt/python/py4j-0.10.8.1-src.zip/py4j/java_collections.py:13: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working
+2021-06-18 03:29:41,118 - INFO - file list: ['train_data/part-25', 'train_data/part-24', 'train_data/part-23', 'train_data/part-26']
+server not ready, wait 3 sec to retry...
+not ready endpoints:['127.0.0.1:29031']
+server not ready, wait 3 sec to retry...
+not ready endpoints:['127.0.0.1:29031']
+Job has been submitted with JobID 393213a1d85cb1cb472a6297dcda613e
+2021-06-18 03:29:56,333 - INFO - TRAIN --> pass: 0 batch: 10 loss: 0.6198225021362305 auc: 0.48652136112711336, batch_auc: 0.48778539874447807
+2021-06-18 03:29:56,947 - INFO - TRAIN --> pass: 0 batch: 20 loss: 0.5356239080429077 auc: 0.5027256873159305, batch_auc: 0.5360698857666288
+2021-06-18 03:29:57,538 - INFO - TRAIN --> pass: 0 batch: 30 loss: 0.46869513392448425 auc: 0.5137166374032682, batch_auc: 0.5556505773301073
+Job has been submitted with JobID 97ca541d6b692e41bf61ca7a848a4763
+2021-06-18 03:30:04,938 - INFO - TRAIN --> pass: 0 batch: 40 loss: 0.5350855588912964 auc: 0.5274241981332264, batch_auc: 0.6022993251251706
+2021-06-18 03:30:05,535 - INFO - TRAIN --> pass: 0 batch: 50 loss: 0.5119624137878418 auc: 0.5409491551434036, batch_auc: 0.6330124722168584
+2021-06-18 03:30:06,123 - INFO - TRAIN --> pass: 0 batch: 60 loss: 0.5872476100921631 auc: 0.551377976519713, batch_auc: 0.6152412552382389
+2021-06-18 03:30:06,695 - INFO - TRAIN --> pass: 0 batch: 70 loss: 0.5068737268447876 auc: 0.5600895822326052, batch_auc: 0.624090184338477
+Job has been submitted with JobID 8c5072128f3be4e8b9bf6e5e6c61b087
+2021-06-18 03:30:14,181 - INFO - TRAIN --> pass: 0 batch: 80 loss: 0.5385243892669678 auc: 0.5723400332274395, batch_auc: 0.6671723358300492
+2021-06-18 03:30:14,777 - INFO - TRAIN --> pass: 0 batch: 90 loss: 0.5242763757705688 auc: 0.580187280004273, batch_auc: 0.6448011309103315
+2021-06-18 03:30:15,421 - INFO - TRAIN --> pass: 0 batch: 100 loss: 0.5042980909347534 auc: 0.5894033269256338, batch_auc: 0.665620697747184
+2021-06-18 03:30:16,016 - INFO - TRAIN --> pass: 0 batch: 110 loss: 0.5389414429664612 auc: 0.597336000137945, batch_auc: 0.6702030818253578
+Job has been submitted with JobID 415ff580a5a55ee25bca7a1b3976a8f0
+2021-06-18 03:30:23,444 - INFO - TRAIN --> pass: 0 batch: 120 loss: 0.589726448059082 auc: 0.6049454764693637, batch_auc: 0.6787518391750521
+2021-06-18 03:30:24,029 - INFO - TRAIN --> pass: 0 batch: 130 loss: 0.6168498396873474 auc: 0.6098644204667205, batch_auc: 0.6651263225568995
+2021-06-18 03:30:24,602 - INFO - TRAIN --> pass: 0 batch: 140 loss: 0.648707926273346 auc: 0.614508214060218, batch_auc: 0.6729896544607559
+2021-06-18 03:30:25,193 - INFO - TRAIN --> pass: 0 batch: 150 loss: 0.4976593255996704 auc: 0.6175424926031793, batch_auc: 0.6572894417930738
+2021-06-18 03:30:25,521 - INFO - epoch 0 finished, use time=37
+
+/usr/local/python3.7.0/lib/python3.7/site-packages/paddle/fluid/io.py:1324: UserWarning: please ensure that you have set the auc states to zeros before saving inference model
+  "please ensure that you have set the auc states to zeros before saving inference model"
+/usr/local/python3.7.0/lib/python3.7/site-packages/paddle/fluid/io.py:1397: UserWarning: save_inference_model specified the param `program_only` to True, It will not save params of Program.
+  "save_inference_model specified the param `program_only` to True, It will not save params of Program."
+2021-06-18 03:30:29,293 - INFO - Distribute Train Success!
+Gloo init with HTTP: need_init_all: False, args: {'http.host': '127.0.0.1', 'http.port': '30019', 'store.prefix': '', 'start_http_server': False, 'http_server_d': <DictProxy object, typeid 'dict' at 0x7f59c06c8828>}
+running sparse embedding with inference: OFF

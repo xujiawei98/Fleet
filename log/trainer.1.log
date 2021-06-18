@@ -1,0 +1,33 @@
+grep: warning: GREP_OPTIONS is deprecated; please use an alias or script
+/home/flink/flink-1.13.0/opt/python/py4j-0.10.8.1-src.zip/py4j/java_gateway.py:2049: DeprecationWarning: invalid escape sequence \*
+/home/flink/flink-1.13.0/opt/python/py4j-0.10.8.1-src.zip/py4j/java_gateway.py:2049: DeprecationWarning: invalid escape sequence \*
+/home/flink/flink-1.13.0/opt/python/py4j-0.10.8.1-src.zip/py4j/java_collections.py:13: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working
+2021-06-18 03:29:41,115 - INFO - file list: ['train_data/part-25', 'train_data/part-24', 'train_data/part-23', 'train_data/part-26']
+server not ready, wait 3 sec to retry...
+not ready endpoints:['127.0.0.1:29031']
+server not ready, wait 3 sec to retry...
+not ready endpoints:['127.0.0.1:29031']
+Job has been submitted with JobID 230296dd1d87dce0bb12db6b160704e5
+2021-06-18 03:29:56,310 - INFO - TRAIN --> pass: 0 batch: 10 loss: 0.6396843194961548 auc: 0.47234430516842746, batch_auc: 0.4739231186545764
+2021-06-18 03:29:56,927 - INFO - TRAIN --> pass: 0 batch: 20 loss: 0.5399143695831299 auc: 0.49270202229068877, batch_auc: 0.5265006244778274
+2021-06-18 03:29:57,530 - INFO - TRAIN --> pass: 0 batch: 30 loss: 0.47577911615371704 auc: 0.502450463377626, batch_auc: 0.5500279239171055
+Job has been submitted with JobID 63d546e253ba2b3d95ca6d3e672fb972
+2021-06-18 03:30:04,974 - INFO - TRAIN --> pass: 0 batch: 40 loss: 0.538853645324707 auc: 0.5114447441028426, batch_auc: 0.5627230427781607
+2021-06-18 03:30:05,568 - INFO - TRAIN --> pass: 0 batch: 50 loss: 0.5125948786735535 auc: 0.521111463444616, batch_auc: 0.588509353152715
+2021-06-18 03:30:06,173 - INFO - TRAIN --> pass: 0 batch: 60 loss: 0.587458610534668 auc: 0.5319637304016337, batch_auc: 0.6003210272873194
+2021-06-18 03:30:06,747 - INFO - TRAIN --> pass: 0 batch: 70 loss: 0.5101650357246399 auc: 0.5421022171349783, batch_auc: 0.6214483988836299
+Job has been submitted with JobID 197499eaa15485518b6f57baf9cfe337
+2021-06-18 03:30:14,171 - INFO - TRAIN --> pass: 0 batch: 80 loss: 0.5378310680389404 auc: 0.5533620980803167, batch_auc: 0.6518855996431151
+2021-06-18 03:30:14,777 - INFO - TRAIN --> pass: 0 batch: 90 loss: 0.5438510179519653 auc: 0.562357844856524, batch_auc: 0.6399272275677268
+2021-06-18 03:30:15,375 - INFO - TRAIN --> pass: 0 batch: 100 loss: 0.5081402063369751 auc: 0.5713681361150402, batch_auc: 0.6485790832290363
+2021-06-18 03:30:15,968 - INFO - TRAIN --> pass: 0 batch: 110 loss: 0.5410370826721191 auc: 0.578241476632542, batch_auc: 0.6429285000713573
+Job has been submitted with JobID 911aaf393fddca9cf3a17d8abc7a9b53
+2021-06-18 03:30:23,475 - INFO - TRAIN --> pass: 0 batch: 120 loss: 0.6102242469787598 auc: 0.5856883172656618, batch_auc: 0.6586233930597638
+2021-06-18 03:30:24,069 - INFO - TRAIN --> pass: 0 batch: 130 loss: 0.6079471111297607 auc: 0.5912036073696045, batch_auc: 0.6516954141800885
+2021-06-18 03:30:24,668 - INFO - TRAIN --> pass: 0 batch: 140 loss: 0.6557607054710388 auc: 0.5968391966241867, batch_auc: 0.6632993942683962
+2021-06-18 03:30:25,263 - INFO - TRAIN --> pass: 0 batch: 150 loss: 0.5198590755462646 auc: 0.5995264576692668, batch_auc: 0.6373545744005792
+2021-06-18 03:30:27,372 - INFO - epoch 0 finished, use time=39
+
+2021-06-18 03:30:27,381 - INFO - Distribute Train Success!
+Gloo init with HTTP: need_init_all: False, args: {'http.host': '127.0.0.1', 'http.port': '30019', 'store.prefix': '', 'start_http_server': False, 'http_server_d': <DictProxy object, typeid 'dict' at 0x7fb2d8b95780>}
+running sparse embedding with inference: OFF

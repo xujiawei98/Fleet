@@ -1,0 +1,10 @@
+grep: warning: GREP_OPTIONS is deprecated; please use an alias or script
+/usr/local/python3.7.0/lib/python3.7/site-packages/py4j/java_collections.py:13: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working
+  from collections import (
+Gloo init with HTTP: need_init_all: False, args: {'http.host': '127.0.0.1', 'http.port': '30019', 'store.prefix': '', 'start_http_server': True, 'http_server_d': <DictProxy object, typeid 'dict' at 0x7f59b9dc2e10>}
+to start http_server
+worker_key:_worker, size: {'_worker': 2}
+start http_server: 30019, {'_worker': 2}
+2021-06-18 03:29:45,127 - INFO - file list: ['train_data/part-25', 'train_data/part-24', 'train_data/part-23', 'train_data/part-26']
+running sparse embedding with inference: OFF
+I0618 03:29:46.026561  7939 brpc_ps_server.cc:64] running server with rank id: 0, endpoint: 127.0.0.1:29031
